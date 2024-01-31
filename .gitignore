@@ -8,3 +8,4 @@ venv
 # Visual Studio Code files
 .vscode/
 *.vscode/
+.python-version

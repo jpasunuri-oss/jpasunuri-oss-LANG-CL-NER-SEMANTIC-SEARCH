@@ -101,7 +101,7 @@ ner_pipeline = pipeline("ner", model=ner_model, tokenizer=tokenizer)
 
 entities = ner_pipeline(query)
 
-# print(entities)
+#print("entities ", entities)
 
 """
     In this case, one entity was detected in the query and its data saved to a dictionary. We now have all the
@@ -111,7 +111,7 @@ entities = ner_pipeline(query)
 results = collection.query(query_texts=[query], n_results=2, where={"word": entities[0]["word"]})
 docs_retrieved = results["documents"]
 number_of_docs = len(docs_retrieved[0])
-# print(number_of_docs, docs_retrieved[0])
+#print(number_of_docs, docs_retrieved[0])
 
 """
     The results of the query have now been filtered to only include the Apple company document.
@@ -126,7 +126,15 @@ def create_ner_pipeline():
         initialize your NER pipeline for the rest of the lab
     """
     # TODO: implement the NER pipeline and return it from the function
-    raise RuntimeError("create_ner_pipeline() is not implemented")
+
+    try:
+        ner_model_id = 'dslim/bert-base-NER'
+        tokenizer = AutoTokenizer.from_pretrained(ner_model_id)
+        ner_model = AutoModelForTokenClassification.from_pretrained(ner_model_id)
+        ner_pipeline = pipeline("ner", model=ner_model, tokenizer=tokenizer)
+        return ner_pipeline
+    except:
+        raise RuntimeError("create_ner_pipeline() is not implemented")
 
 def get_Bass_Pro_Shop_company_document() -> list[str]:
     """
@@ -141,7 +149,14 @@ def get_Bass_Pro_Shop_company_document() -> list[str]:
     try:
         query = "Does Bass Pro Shop sell anything new?"
         ner_pipe = create_ner_pipeline()
-        raise RuntimeError("get_Bass_Pro_Shop_company_document() is not implemented correctly")
+        entities = ner_pipe(query)
+        print(entities)
+        filter = {"organization": entities[0]["word"] + " " + entities[1]["word"] + " " + entities[2]["word"]}
+        results = collection.query(query_texts=[query], n_results=2, where=filter)
+        result = [results["ids"][0], results["documents"][0]]
+        if len(result) == 0:
+            raise RuntimeError("get_Bass_Pro_Shop_company_document() is not implemented correctly")
+        return result
 
     except RuntimeError as e:
         return e
@@ -159,8 +174,15 @@ def get_George_going_to_dinner_document() -> list[str]:
     try:
         query = "why do you take George to Washington?"
         ner_pipe = create_ner_pipeline()
-        raise RuntimeError("get_George_going_to_dinner_document() is not implemented correctly")
-    
+        entities = ner_pipeline(query)
+        #print(entities)
+        results = collection.query(query_texts=[query], n_results=2, where={"person": entities[0]["word"]})
+        #print(results)
+        result = [results["ids"][0], results["documents"][0]]
+        print(result)
+        if len(result) == 0:
+            raise RuntimeError("get_George_going_to_dinner_document() is not implemented correctly")
+        return result    
     except RuntimeError as e:
         return e
 
@@ -177,11 +199,17 @@ def get_George_Washington_Document() -> list[str]:
     try:
         query = "Did George Washington and Napoleon Bonaparte ever meet?"
         ner_pipe = create_ner_pipeline()
-        raise RuntimeError("get_George_Washington_Document() is not implemented correctly")
+        entities = ner_pipeline(query)
+        #print(entities)
+        results = collection.query(query_texts=[query], n_results=2, where={entities[0]["word"] + " " + entities[1]["word"]: True})
+        result = [results["ids"][0], results["documents"][0]]
+        if len(result) == 0:
+            raise RuntimeError("get_George_Washington_Document() is not implemented correctly")
+        return result
     
     except RuntimeError as e:
         return e
 
 if __name__ == "__main__":
     # Use this space to test your code
-    pass
+    print(get_Bass_Pro_Shop_company_document())
